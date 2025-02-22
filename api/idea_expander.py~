@@ -18,28 +18,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class WriteRequest(BaseModel):
-    outline: str
-    research: str
+class IdeaRequest(BaseModel):
+    idea: str
 
-@app.post("/write-chapter")
-def write_chapter(request: WriteRequest):
-    # Use OpenAI GPT to write a chapter
-    prompt = f"Write a chapter based on this outline: {request.outline}. Use this research: {request.research}."
+@app.post("/expand-idea")
+def expand_idea(request: IdeaRequest):
+    # Use DeepSeek-V3 to expand the idea
+    prompt = f"Expand this idea into a detailed book outline: {request.idea}"
     try:
         response = requests.post(
-            "https://api.openai.com/v1/chat/completions",  # OpenAI API endpoint
-            headers={"Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}"},
+            "https://api.deepseek.com/chat/completions",  # Correct DeepSeek API endpoint
+            headers={"Authorization": f"Bearer {os.getenv('DEEPSEEK_API_KEY')}"},
             json={
-                "model": "gpt-3.5-turbo",  # Use a free-tier model
+                "model": "deepseek-chat",  # Use DeepSeek-V3
                 "messages": [
                     {"role": "system", "content": "You are a helpful assistant."},
                     {"role": "user", "content": prompt}
                 ],
-                "max_tokens": 2000
+                "stream": False  # Set to True for streaming responses
             }
         )
         response.raise_for_status()  # Raise an error for bad status codes
-        return {"chapter": response.json()["choices"][0]["message"]["content"]}
+        return {"outline": response.json()["choices"][0]["message"]["content"]}
     except requests.exceptions.RequestException as e:
-        return {"chapter": {"error_msg": str(e)}}
+        return {"outline": {"error_msg": str(e)}}
