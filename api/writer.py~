@@ -24,10 +24,22 @@ class WriteRequest(BaseModel):
 
 @app.post("/write-chapter")
 def write_chapter(request: WriteRequest):
+    # Use OpenAI GPT to write a chapter
     prompt = f"Write a chapter based on this outline: {request.outline}. Use this research: {request.research}."
-    response = requests.post(
-        "https://api.deepseek.com/v3/generate",
-        headers={"Authorization": f"Bearer {os.getenv('DEEPSEEK_API_KEY')}"},
-        json={"prompt": prompt, "max_tokens": 2000}
-    )
-    return {"chapter": response.json()}
+    try:
+        response = requests.post(
+            "https://api.openai.com/v1/chat/completions",  # OpenAI API endpoint
+            headers={"Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}"},
+            json={
+                "model": "gpt-3.5-turbo",  # Use a free-tier model
+                "messages": [
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                "max_tokens": 2000
+            }
+        )
+        response.raise_for_status()  # Raise an error for bad status codes
+        return {"chapter": response.json()["choices"][0]["message"]["content"]}
+    except requests.exceptions.RequestException as e:
+        return {"chapter": {"error_msg": str(e)}}

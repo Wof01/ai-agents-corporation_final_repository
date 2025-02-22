@@ -1,28 +1,18 @@
-from fastapi import FastAPI
+from fastapi import APIRouter
 from pydantic import BaseModel
 import requests
 import os
 from dotenv import load_dotenv
-from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
-app = FastAPI()
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins (or specify your Streamlit app URL)
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+router = APIRouter()
 
 class WriteRequest(BaseModel):
     outline: str
     research: str
 
-@app.post("/write-chapter")
+@router.post("/")
 def write_chapter(request: WriteRequest):
     # Use OpenAI GPT to write a chapter
     prompt = f"Write a chapter based on this outline: {request.outline}. Use this research: {request.research}."
