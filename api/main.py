@@ -1,6 +1,7 @@
+
 from fastapi import FastAPI
-from .idea_expander import router as idea_expander_router
-from .writer import router as writer_router
+from idea_expander import router as idea_expander_router
+from writer import router as writer_router
 
 app = FastAPI()
 
