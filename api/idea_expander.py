@@ -23,15 +23,22 @@ class IdeaRequest(BaseModel):
 
 @app.post("/expand-idea")
 def expand_idea(request: IdeaRequest):
-    # Use DeepSeek-V3 or another AI model to expand the idea
+    # Use DeepSeek-V3 to expand the idea
     prompt = f"Expand this idea into a detailed book outline: {request.idea}"
     try:
         response = requests.post(
-            "https://api.deepseek.com/v3/generate",
+            "https://api.deepseek.com/chat/completions",  # Correct DeepSeek API endpoint
             headers={"Authorization": f"Bearer {os.getenv('DEEPSEEK_API_KEY')}"},
-            json={"prompt": prompt, "max_tokens": 1000}
+            json={
+                "model": "deepseek-chat",  # Use DeepSeek-V3
+                "messages": [
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                "stream": False  # Set to True for streaming responses
+            }
         )
         response.raise_for_status()  # Raise an error for bad status codes
-        return {"outline": response.json()}
+        return {"outline": response.json()["choices"][0]["message"]["content"]}
     except requests.exceptions.RequestException as e:
         return {"outline": {"error_msg": str(e)}}
